@@ -1,4 +1,4 @@
-# Location Profiler
+# Agent of Location Profiler
 
 An agent that answers questions based on your location history profile using MCP tools. It can also predict your next destination or help to plan your trip.
 
