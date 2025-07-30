@@ -54,8 +54,9 @@ async def async_main(user_id, session_id, query):
         query =input("\n[User] ('quit' to exit): ")
         if query.lower() == 'quit' or query.lower() == 'exit':
             break
-    await async_runner_call(query, runner, user_id, session.id)
+        await async_runner_call(query, runner, user_id, session.id)
 
+    #print(f"Session record: {session}")
     await runner.close()
 
 def main():
