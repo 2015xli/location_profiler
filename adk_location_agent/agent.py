@@ -19,6 +19,7 @@ def sync_agent():
             "Use the provided tools to improve the accuracy of your answer."
         ),
         tools=[toolset],
+        output_key="last_response"
     )
 
 root_agent = sync_agent()

@@ -10,12 +10,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 async def async_runner_init(user_id, session_id):
     session_service = InMemorySessionService()
-    session = await session_service.get_session(
-        app_name="location_agent", user_id=user_id, session_id=session_id
+    init_state={"current_location":"home"}
+    session = await session_service.create_session(
+        app_name="location_agent", user_id=user_id, session_id=session_id,
+        state=init_state
     )
     if not session:
         session = await session_service.create_session(
-            app_name="location_agent", user_id=user_id
+            app_name="location_agent", user_id=user_id,
+            state=init_state
         )
 
     agent_instance = root_agent
@@ -56,7 +59,7 @@ async def async_main(user_id, session_id, query):
             break
         await async_runner_call(query, runner, user_id, session.id)
 
-    #print(f"Session record: {session}")
+    print(f"Session record: {session.state}")
     await runner.close()
 
 def main():
