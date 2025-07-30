@@ -5,25 +5,27 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from agent import root_agent
 import os, sys
-from contextlib import ExitStack
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-async def async_main(query, user_id, session_id):
+async def async_runner_init(user_id, session_id):
     session_service = InMemorySessionService()
-    session = await (session_service.get_session(
+    session = await session_service.get_session(
         app_name="location_agent", user_id=user_id, session_id=session_id
-    ) if session_id else session_service.create_session(
-        app_name="location_agent", user_id=user_id
-    ))
-
-    print(f"session: {session}")
+    )
+    if not session:
+        session = await session_service.create_session(
+            app_name="location_agent", user_id=user_id
+        )
 
     agent_instance = root_agent
     runner = Runner(agent=agent_instance, app_name="location_agent", session_service=session_service)
 
+    return runner, session
+
+async def async_runner_call(query, runner, user_id, session_id):
     content = types.Content(role="user", parts=[types.Part(text=query)])
-    async for event in runner.run_async(user_id=user_id, session_id=session.id, new_message=content):
+    async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=content):
         calls = event.get_function_calls()
         if calls:
             for call in calls:
@@ -41,14 +43,29 @@ async def async_main(query, user_id, session_id):
         
     print(f"\n\u2728 Agent Response: {final_response_text}\n")
 
+async def async_main(user_id, session_id, query):
+    runner, session = await async_runner_init(user_id, session_id)
+
+    if query:
+        print(f"\n[User]: {query}")
+        await async_runner_call(query, runner, user_id, session.id)
+
+    while True:
+        query =input("\n[User] ('quit' to exit): ")
+        if query.lower() == 'quit' or query.lower() == 'exit':
+            break
+    await async_runner_call(query, runner, user_id, session.id)
+
+    await runner.close()
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--query", required=True)
-    parser.add_argument("--user-id", default="user")
+    parser.add_argument("--user-id", default="user_1")
     parser.add_argument("--session-id", default=None)
+    parser.add_argument("--query", default=None)
     args = parser.parse_args()
     try:
-        asyncio.run(async_main(args.query, args.user_id, args.session_id))
+        asyncio.run(async_main(args.user_id, args.session_id, args.query))
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
