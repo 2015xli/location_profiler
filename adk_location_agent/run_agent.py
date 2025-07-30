@@ -17,6 +17,8 @@ async def async_main(query, user_id, session_id):
         app_name="location_agent", user_id=user_id
     ))
 
+    print(f"session: {session}")
+
     agent_instance = root_agent
     runner = Runner(agent=agent_instance, app_name="location_agent", session_service=session_service)
 
